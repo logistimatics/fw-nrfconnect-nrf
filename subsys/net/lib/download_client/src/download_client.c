@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include <zephyr.h>
 #include <zephyr/types.h>
 #include <toolchain/common.h>
@@ -279,6 +280,40 @@ static int get_request_send(struct download_client *client)
 	return 0;
 }
 
+static int my_strncasecmp(const char *s1, const char *s2, size_t n)
+{
+	if (n != 0) {
+		do {
+			if (tolower(*s1) != tolower(*s2++))
+				return (tolower(*s1) - tolower(*--s2));
+			if (*s1++ == '\0')
+				break;
+		} while (--n != 0);
+	}
+	return (0);
+}
+
+static char *my_strcasestr(const char *s, const char *find)
+{
+	char c, sc;
+	size_t len;
+
+	c = *find++;
+	if (c != 0) {
+		c = (char)tolower((unsigned char)c);
+		len = strlen(find);
+		do {
+			do {
+				sc = *s++;
+				if (sc == 0)
+					return (NULL);
+			} while ((char)tolower((unsigned char)sc) != c);
+		} while (my_strncasecmp(s, find, len) != 0);
+		s--;
+	}
+	return ((char *)s);
+}
+
 /* Returns:
  *  1 while the header is being received
  *  0 if the header has been fully received
@@ -309,23 +344,28 @@ static int header_parse(struct download_client *client)
 
 	/* If file size is not known, read it from the header */
 	if (client->file_size == 0) {
-		if (NULL != (p = strcasestr(client->buf, "Content-Range: bytes"))) {
-			p = strstr(p, "/");
+		char *cr = my_strcasestr(client->buf, "Content-Range: bytes");
+		char *cl = my_strcasestr(client->buf, "Content-Length");
+
+		if (!cr) {
+			p = strstr(cr, "/");
 			if (!p) {
 				/* Cannot continue */
-				LOG_ERR("Server did not send file size in response");
+				LOG_ERR("Server did not send file size"
+					" in response");
 				return -1;
 			}
 
 			client->file_size = atoi(p + 1);
 
 			LOG_DBG("File size = %d", client->file_size);
-		} else if (NULL != strcasestr(client->buf, "Accept-Range: bytes") &&
-			NULL != (p = strcasestr(client->buf, "Content-Length"))) {
-			p = strstr(p, ":");
+		} else if (!cl &&
+			   !my_strcasestr(client->buf, "Accept-Range: bytes")) {
+			p = strstr(cl, ":");
 			if (!p) {
 				/* Cannot continue */
-				LOG_ERR("Server did not send file size in response");
+				LOG_ERR("Server did not send file size"
+					" in response");
 				return -1;
 			}
 
