@@ -1,0 +1,17 @@
+# Kconfig - nRF91 L4 board configuration
+#
+# Copyright (c) 2019 Nordic Semiconductor ASA
+#
+# SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
+
+if SOC_NRF9160_SICA
+
+config BOARD_NRF9160_L4
+	bool "nRF9160 L4"
+	depends on !TRUSTED_EXECUTION_NONSECURE
+
+config BOARD_NRF9160_L4NS
+	bool "nRF9160 L4 non-secure"
+	depends on TRUSTED_EXECUTION_NONSECURE
+
+endif # SOC_NRF9160_SICA
