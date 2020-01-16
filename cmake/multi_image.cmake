@@ -4,20 +4,25 @@
 # SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
 #
 
-if(IMAGE_NAME)
-  set_property(
-    TARGET         zephyr_property_target
-    APPEND_STRING
-    PROPERTY       shared_vars
-    "set(${IMAGE_NAME}KERNEL_HEX_NAME ${KERNEL_HEX_NAME})\n"
-    )
+function(share content)
+  # Adds 'content' as a line in the 'shared_vars' property.
+  # This property is again written to a file which is imported as a cmake file
+  # by the parent image. In other words, this function can be used to share
+  # information (variables, lists etc) with the parent image.
+  #
+  # Example usage 'share("set(visible_in_parent \"I AM YOUR CHILD\")")'
 
   set_property(
     TARGET         zephyr_property_target
     APPEND_STRING
     PROPERTY       shared_vars
-    "list(APPEND ${IMAGE_NAME}BUILD_BYPRODUCTS ${PROJECT_BINARY_DIR}/${KERNEL_HEX_NAME})\n"
+    "${content}\n"
     )
+endfunction()
+
+if(IMAGE_NAME)
+  share("set(${IMAGE_NAME}KERNEL_HEX_NAME ${KERNEL_HEX_NAME})")
+  share("list(APPEND ${IMAGE_NAME}BUILD_BYPRODUCTS ${PROJECT_BINARY_DIR}/${KERNEL_HEX_NAME})")
 
   file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/shared_vars.cmake
     CONTENT $<TARGET_PROPERTY:zephyr_property_target,shared_vars>
@@ -73,6 +78,11 @@ endfunction()
 function(add_child_image_from_source name sourcedir)
   message("\n=== child image ${name} begin ===")
 
+  # Set ${name}_BOARD based on what BOARD is set to if not already set by parent
+  if (NOT ${name}_BOARD)
+    image_board_selection(${BOARD} ${name}_BOARD)
+  endif()
+
   # Construct a list of variables that, when present in the root
   # image, should be passed on to all child images as well.
   list(APPEND
@@ -102,9 +112,6 @@ function(add_child_image_from_source name sourcedir)
         )
     endif()
   endforeach()
-
-  # Set ${name}_BOARD based on what BOARD is set to.
-  image_board_selection(${BOARD} ${name}_BOARD)
 
   get_cmake_property(VARIABLES              VARIABLES)
   get_cmake_property(VARIABLES_CACHED CACHE_VARIABLES)
@@ -146,6 +153,16 @@ function(add_child_image_from_source name sourcedir)
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${name}
     RESULT_VARIABLE ret
     )
+
+  if (IMAGE_NAME)
+    # Expose your childrens secrets to your parent
+    set_property(
+      TARGET         zephyr_property_target
+      APPEND_STRING
+      PROPERTY       shared_vars
+      "include(${CMAKE_BINARY_DIR}/${name}/shared_vars.cmake)\n"
+      )
+  endif()
 
   set_property(DIRECTORY APPEND PROPERTY
     CMAKE_CONFIGURE_DEPENDS
