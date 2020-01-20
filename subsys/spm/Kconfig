@@ -104,6 +104,10 @@ config SPM_NRF_CLOCK_NS
 	bool "Clock control is Non-Secure"
 	default y
 
+config SPM_NRF_RTC0_NS
+	bool "RTC0 is Non-Secure"
+	default y
+
 config SPM_NRF_RTC1_NS
 	bool "RTC1 is Non-Secure"
 	default y
@@ -213,8 +217,6 @@ config SPM_NRF_DPPIC_PERM_MASK
 
 endif # IS_SPM
 
-endmenu
-
 # Set new default name for the veneers file.
 
 if ARM_FIRMWARE_USES_SECURE_ENTRY_FUNCS
@@ -228,3 +230,5 @@ config ARM_ENTRY_VENEERS_LIB_NAME
 	string "Entry Veneers symbol file"
 	default "libspmsecureentries.a"
 endif
+
+endmenu # SPM
