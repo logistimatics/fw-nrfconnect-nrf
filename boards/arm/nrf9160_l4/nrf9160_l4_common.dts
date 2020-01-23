@@ -104,18 +104,16 @@
 &uart0 {
 	current-speed = <115200>;
 	status = "okay";
-	tx-pin = <22>;
-	rx-pin = <21>;
+	tx-pin = <11>;
+	rx-pin = <12>;
 };
 
-/*
 &uart1 {
 	current-speed = <115200>;
 	status = "okay";
-	tx-pin = <22>;
-	rx-pin = <21>;
+	tx-pin = <21>;
+	rx-pin = <22>;
 };
-*/
 
 &flash0 {
 	/*
