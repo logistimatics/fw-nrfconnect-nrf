@@ -5,6 +5,7 @@
  */
 
 #include <bluetooth/hci_driver.h>
+#include <bluetooth/hci_vs.h>
 #include <init.h>
 #include <irq.h>
 #include <kernel.h>
@@ -158,18 +159,12 @@ static int hci_driver_send(struct net_buf *buf)
 	return err;
 }
 
-#ifndef bt_acl_flag_pb
-/* Temporary defines, missing from hci.h */
-#define bt_acl_flags_pb(h)		((h) >> 12 & BIT_MASK(2))
-#define bt_acl_flags_bc(h)		((h) >> 14 & BIT_MASK(2))
-#endif /* bt_acl_flag_pb */
-
 static void data_packet_process(u8_t *hci_buf)
 {
 	struct net_buf *data_buf = bt_buf_get_rx(BT_BUF_ACL_IN, K_FOREVER);
 	struct bt_hci_acl_hdr *hdr = (void *)hci_buf;
 	u16_t hf, handle, len;
-	u8_t pb, bc;
+	u8_t flags, pb, bc;
 
 	if (!data_buf) {
 		BT_ERR("No data buffer available");
@@ -179,8 +174,9 @@ static void data_packet_process(u8_t *hci_buf)
 	len = sys_le16_to_cpu(hdr->len);
 	hf = sys_le16_to_cpu(hdr->handle);
 	handle = bt_acl_handle(hf);
-	pb = bt_acl_flags_pb(hf);
-	bc = bt_acl_flags_bc(hf);
+	flags = bt_acl_flags(hf);
+	pb = bt_acl_flags_pb(flags);
+	bc = bt_acl_flags_bc(flags);
 
 	BT_DBG("Data: handle (0x%02x), PB(%01d), BC(%01d), len(%u)", handle,
 	       pb, bc, len);
@@ -406,23 +402,40 @@ static const struct bt_hci_driver drv = {
 	.send = hci_driver_send,
 };
 
-u8_t bt_read_static_addr(bt_addr_le_t *addr)
+uint8_t bt_read_static_addr(struct bt_hci_vs_static_addr *addr)
 {
 	if (((NRF_FICR->DEVICEADDR[0] != UINT32_MAX) ||
-	     ((NRF_FICR->DEVICEADDR[1] & UINT16_MAX) != UINT16_MAX)) &&
-	    (NRF_FICR->DEVICEADDRTYPE & 0x01)) {
-		sys_put_le32(NRF_FICR->DEVICEADDR[0], &addr->a.val[0]);
-		sys_put_le16(NRF_FICR->DEVICEADDR[1], &addr->a.val[4]);
+	    ((NRF_FICR->DEVICEADDR[1] & UINT16_MAX) != UINT16_MAX)) &&
+	     (NRF_FICR->DEVICEADDRTYPE & 0x01)) {
+		sys_put_le32(NRF_FICR->DEVICEADDR[0], &addr->bdaddr.val[0]);
+		sys_put_le16(NRF_FICR->DEVICEADDR[1], &addr->bdaddr.val[4]);
 
 		/* The FICR value is a just a random number, with no knowledge
 		 * of the Bluetooth Specification requirements for random
 		 * static addresses.
 		 */
-		BT_ADDR_SET_STATIC(&addr->a);
+		BT_ADDR_SET_STATIC(&addr->bdaddr);
 
-		addr->type = BT_ADDR_LE_RANDOM;
+		/* If no public address is provided and a static address is
+		 * available, then it is recommended to return an identity root
+		 * key (if available) from this command.
+		 */
+		if ((NRF_FICR->IR[0] != UINT32_MAX) &&
+		    (NRF_FICR->IR[1] != UINT32_MAX) &&
+		    (NRF_FICR->IR[2] != UINT32_MAX) &&
+		    (NRF_FICR->IR[3] != UINT32_MAX)) {
+			sys_put_le32(NRF_FICR->IR[0], &addr->ir[0]);
+			sys_put_le32(NRF_FICR->IR[1], &addr->ir[4]);
+			sys_put_le32(NRF_FICR->IR[2], &addr->ir[8]);
+			sys_put_le32(NRF_FICR->IR[3], &addr->ir[12]);
+		} else {
+			/* Mark IR as invalid */
+			(void)memset(addr->ir, 0x00, sizeof(addr->ir));
+		}
+
 		return 1;
 	}
+
 	return 0;
 }
 
