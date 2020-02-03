@@ -11,7 +11,7 @@
 #include <sys/printk.h>
 #include <sys/byteorder.h>
 #include <zephyr.h>
-#include <gpio.h>
+#include <drivers/gpio.h>
 #include <soc.h>
 
 #include <bluetooth/bluetooth.h>
@@ -243,4 +243,3 @@ void main(void)
 		k_sleep(RUN_LED_BLINK_INTERVAL);
 	}
 }
-

@@ -1,6 +1,6 @@
 #include <zephyr.h>
 #include <stdio.h>
-#include <flash.h>
+#include <drivers/flash.h>
 #include <net/socket.h>
 #include <nrf_socket.h>
 #include <logging/log.h>
@@ -223,4 +223,3 @@ int dfu_target_modem_done(bool successful)
 
 	return 0;
 }
-

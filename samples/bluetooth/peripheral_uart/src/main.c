@@ -10,7 +10,7 @@
 
 #include <zephyr/types.h>
 #include <zephyr.h>
-#include <uart.h>
+#include <drivers/uart.h>
 
 #include <device.h>
 #include <soc.h>
@@ -477,4 +477,3 @@ K_THREAD_DEFINE(led_blink_thread_id, STACKSIZE, led_blink_thread, NULL, NULL,
 
 K_THREAD_DEFINE(ble_write_thread_id, STACKSIZE, ble_write_thread, NULL, NULL,
 		NULL, PRIORITY, 0, K_NO_WAIT);
-

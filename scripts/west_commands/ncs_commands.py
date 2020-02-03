@@ -214,17 +214,14 @@ class NcsLoot(NcsWestCommand):
         # name: project name
         # project: the west.manifest.Project instance in the NCS manifest
         # z_project: the Project instance in the upstream manifest
-        msg = f'{_name_and_path(project)} outstanding downstream patches:'
+        log.banner(f'{_name_and_path(project)}')
 
         # Get the upstream revision of the project. The zephyr project
         # has to be treated as a special case.
         if name == 'zephyr':
             z_rev = self.zephyr_rev
-            msg += f' NOTE: {z_rev} *must* be up to date'
         else:
             z_rev = z_project.revision
-
-        log.banner(msg)
 
         try:
             nsha = project.sha(project.revision)
@@ -235,7 +232,7 @@ class NcsLoot(NcsWestCommand):
                     f'(need revision {project.revision})')
             return
         try:
-            zsha = z_project.sha(z_project.revision)
+            zsha = z_project.sha(z_rev)
             z_project.git('cat-file -e ' + zsha)
         except subprocess.CalledProcessError:
             log.wrn("can't get loot; please fetch upstream URL "
@@ -243,13 +240,17 @@ class NcsLoot(NcsWestCommand):
                     f'(need revision {z_project.revision})')
             return
 
+        log.inf(f'NCS commit: {nsha}\nupstream commit: {zsha}')
         try:
             analyzer = nwh.RepoAnalyzer(project, z_project,
                                         project.revision, z_rev)
         except nwh.InvalidRepositoryError as ire:
             log.die(str(ire))
         try:
-            for c in analyzer.downstream_outstanding:
+            loot = analyzer.downstream_outstanding
+            log.inf('OOT patches: ' +
+                    (f'{len(loot)} total ' if loot else 'none'))
+            for c in loot:
                 if args.files and not nwh.commit_affects_files(c, args.files):
                     log.dbg(f"skipping {c.oid}; it doesn't affect file filter",
                             level=log.VERBOSE_VERY)
@@ -267,12 +268,9 @@ class NcsCompare(NcsWestCommand):
             'ncs-compare',
             'compare upstream manifest with NCS',
             dedent('''
-            Compares project status in upstream and NCS manifests.
-
-            Run this after doing a zephyr mergeup to double-check the
-            results. This command works using the current contents of
-            zephyr/west.yml, so the mergeup must be complete for output
-            to be valid.
+            Compares project status between zephyr/west.ml and your
+            current NCS west manifest-rev branches (i.e. the results of your
+            most recent 'west update').
 
             Use --verbose to include information on blacklisted
             upstream projects.'''))
@@ -287,8 +285,8 @@ class NcsCompare(NcsWestCommand):
         check_west_version()
         self.setup_upstream_downstream(args)
 
-        log.inf('Comparing nrf/west.yml with zephyr/west.yml at revision '
-                f'{self.zephyr_rev}' +
+        log.inf('Comparing your manifest-rev branches with zephyr/west.yml '
+                f'at {self.zephyr_rev}' +
                 (', sha: ' + self.zephyr_sha
                  if self.zephyr_rev != self.zephyr_sha else ''))
         log.inf()
@@ -314,7 +312,7 @@ class NcsCompare(NcsWestCommand):
 
         def print_lst(projects):
             for p in projects:
-                log.small_banner(f'{_name_and_path(p)}')
+                log.inf(f'{_name_and_path(p)}')
 
         if missing_blacklisted and log.VERBOSE >= log.VERBOSE_NORMAL:
             log.banner('blacklisted zephyr projects',
@@ -354,11 +352,10 @@ class NcsCompare(NcsWestCommand):
         np = self.ncs_pmap[nn]
         banner = f'{nn} ({zp.path}):'
 
+        nrev = 'refs/heads/manifest-rev'
         if np.name == 'zephyr':
-            nrev = self.manifest.get_projects(['zephyr'])[0].revision
             zrev = self.zephyr_sha
         else:
-            nrev = np.revision
             zrev = zp.revision
 
         nsha = self.checked_sha(np, nrev)
@@ -385,34 +382,23 @@ class NcsCompare(NcsWestCommand):
         elif ahead and not behind:
             status = f'ahead by {ahead} commits'
         elif np.is_ancestor_of(nsha, zsha):
-            status = (f'behind by {behind} commits, '
-                      f'can be fast-forwarded to {zsha}')
+            status = f'behind by {behind} commits; can be fast-forwarded'
         else:
-            status = f'diverged from upstream: {ahead} ahead, {behind} behind'
+            status = f'diverged: {ahead} ahead, {behind} behind'
 
-        upstream_rev = f'upstream revision: {zrev}'
-        if zrev != zsha:
-            upstream_rev += f' ({zsha})'
-
-        downstream_rev = 'NCS revision: ' + nrev
-        if nrev != nsha:
-            downstream_rev += f' ({nsha})'
-
+        commits = f'NCS commit: {nsha}, upstream commit: {zsha}'
         if 'up to date' in status or 'ahead by' in status:
             if log.VERBOSE > log.VERBOSE_NONE:
                 # Up to date or ahead: only print in verbose mode.
                 log.small_banner(banner)
-                status += ', ' + downstream_rev
-                if 'ahead by' in status:
-                    status += ', ' + upstream_rev
+                log.inf(commits)
                 log.inf(status)
                 likely_merged(np, zp, nsha, zsha)
         else:
             # Behind or diverged: always print.
             log.small_banner(banner)
+            log.inf(commits)
             log.msg(status, color=log.WRN_COLOR)
-            log.inf(upstream_rev)
-            log.inf(downstream_rev)
             likely_merged(np, zp, nsha, zsha)
 
 def _name_and_path(project):
