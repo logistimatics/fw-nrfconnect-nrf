@@ -38,7 +38,7 @@ manifest:
     - name: zephyr
       repo-path: fw-nrfconnect-zephyr
       west-commands: scripts/west-commands.yml
-      revision: 924b7938af13d22feb5ee52b08ce807c788b5317
+      revision: v2.1.99-ncs1-rc1
     - name: segger
       revision: 6fcf61606d6012d2c44129edc033f59331e268bc
       path: modules/debug/segger
@@ -49,11 +49,11 @@ manifest:
       remote: zephyrproject
     - name: mcuboot
       repo-path: fw-nrfconnect-mcuboot
-      revision: d0c2fbefd26e830ddff08b3060d7f16af5eccd26
+      revision: v1.4.99-ncs2-rc1
       path: bootloader/mcuboot
     - name: mcumgr
       repo-path: fw-nrfconnect-mcumgr
-      revision: 1afd6bbbfed0137b3156349f968634bbd8fc6fff
+      revision: v0.0.1-ncs1-rc1
       path: modules/lib/mcumgr
     - name: tinycbor
       path: modules/lib/tinycbor
@@ -69,7 +69,7 @@ manifest:
       revision: 30b7efa827b04d2e47840716b0372737fe7d6c92
     - name: nrfxlib
       path: nrfxlib
-      revision: 587634674ac33f719aab1a9b990cab0e835d49ee
+      revision: 1e8b3eef2566a5670861c66a760e20742ead72d4
     - name: cmock
       path: test/cmock
       revision: c243b9a7a7b3c471023193992b46cf1bd1910450
@@ -81,7 +81,7 @@ manifest:
     - name: mbedtls-nrf
       path: mbedtls
       repo-path: mbedtls
-      revision: mbedtls-2.16.3
+      revision: mbedtls-2.16.4
       remote: armmbed
     - name: civetweb
       path: modules/lib/civetweb
