@@ -467,7 +467,6 @@ int aws_fota_mqtt_evt_handler(struct mqtt_client *const client,
 		/* Handling for default case */
 		return 1;
 	}
-	return 1;
 }
 
 
@@ -487,8 +486,19 @@ static void http_fota_handler(const struct fota_download_evt *evt)
 			callback(AWS_FOTA_EVT_ERROR);
 		}
 		break;
+
+	case FOTA_DOWNLOAD_EVT_ERASE_PENDING:
+		callback(AWS_FOTA_EVT_ERASE_PENDING);
+		break;
+
+	case FOTA_DOWNLOAD_EVT_ERASE_DONE:
+		callback(AWS_FOTA_EVT_ERASE_DONE);
+		break;
+
 	case FOTA_DOWNLOAD_EVT_ERROR:
 		LOG_ERR("FOTA download failed, report back");
+		fota_state = NONE;
+		execution_state = AWS_JOBS_QUEUED;
 		(void) update_job_execution(c, job_id, AWS_JOBS_FAILED,
 					    fota_state, -1, "");
 		callback(AWS_FOTA_EVT_ERROR);
