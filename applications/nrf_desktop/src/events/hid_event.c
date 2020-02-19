@@ -63,7 +63,6 @@ static void profile_hid_mouse_event(struct log_event_buf *buf,
 {
 	const struct hid_mouse_event *event = cast_hid_mouse_event(eh);
 
-	ARG_UNUSED(event);
 	profiler_log_encode_u32(buf, (u32_t)event->subscriber);
 	profiler_log_encode_u32(buf, event->button_bm);
 	profiler_log_encode_u32(buf, event->wheel);
@@ -82,37 +81,36 @@ EVENT_TYPE_DEFINE(hid_mouse_event,
 		  log_hid_mouse_event,
 		  &hid_mouse_event_info);
 
-static int log_hid_consumer_ctrl_event(const struct event_header *eh, char *buf,
-				       size_t buf_len)
+static int log_hid_ctrl_event(const struct event_header *eh, char *buf,
+			      size_t buf_len)
 {
-	const struct hid_consumer_ctrl_event *event =
-		cast_hid_consumer_ctrl_event(eh);
+	const struct hid_ctrl_event *event = cast_hid_ctrl_event(eh);
 
 	return snprintf(buf, buf_len,
-			"usage: 0x%" PRIx16 " => %p",
-			event->usage, event->subscriber);
+			"usage: 0x%" PRIx16 "(%s) => %p",
+			event->usage, in_report_name[event->report_type],
+			event->subscriber);
 }
 
-static void profile_hid_consumer_ctrl_event(struct log_event_buf *buf,
-					    const struct event_header *eh)
+static void profile_hid_ctrl_event(struct log_event_buf *buf,
+				   const struct event_header *eh)
 {
-	const struct hid_consumer_ctrl_event *event =
-		cast_hid_consumer_ctrl_event(eh);
+	const struct hid_ctrl_event *event = cast_hid_ctrl_event(eh);
 
-	ARG_UNUSED(event);
+	profiler_log_encode_u32(buf, (u32_t)event->report_type);
 	profiler_log_encode_u32(buf, (u32_t)event->subscriber);
 	profiler_log_encode_u32(buf, event->usage);
 }
 
-EVENT_INFO_DEFINE(hid_consumer_ctrl_event,
-		  ENCODE(PROFILER_ARG_U32, PROFILER_ARG_U16),
-		  ENCODE("subscriber", "usage"),
-		  profile_hid_consumer_ctrl_event);
+EVENT_INFO_DEFINE(hid_ctrl_event,
+		  ENCODE(PROFILER_ARG_U32, PROFILER_ARG_U32, PROFILER_ARG_U16),
+		  ENCODE("report_type", "subscriber", "usage"),
+		  profile_hid_ctrl_event);
 
-EVENT_TYPE_DEFINE(hid_consumer_ctrl_event,
-		  IS_ENABLED(CONFIG_DESKTOP_INIT_LOG_HID_CONSUMER_CTRL_EVENT),
-		  log_hid_consumer_ctrl_event,
-		  &hid_consumer_ctrl_event_info);
+EVENT_TYPE_DEFINE(hid_ctrl_event,
+		  IS_ENABLED(CONFIG_DESKTOP_INIT_LOG_HID_CTRL_EVENT),
+		  log_hid_ctrl_event,
+		  &hid_ctrl_event_info);
 
 static int log_hid_report_subscriber_event(const struct event_header *eh,
 					      char *buf, size_t buf_len)
@@ -131,7 +129,6 @@ static void profile_hid_report_subscriber_event(struct log_event_buf *buf,
 	const struct hid_report_subscriber_event *event =
 		cast_hid_report_subscriber_event(eh);
 
-	ARG_UNUSED(event);
 	profiler_log_encode_u32(buf, (u32_t)event->subscriber);
 	profiler_log_encode_u32(buf, event->connected);
 }
@@ -171,7 +168,6 @@ static void profile_hid_report_sent_event(struct log_event_buf *buf,
 	const struct hid_report_sent_event *event =
 		cast_hid_report_sent_event(eh);
 
-	ARG_UNUSED(event);
 	profiler_log_encode_u32(buf, (u32_t)event->subscriber);
 	profiler_log_encode_u32(buf, event->report_type);
 	profiler_log_encode_u32(buf, event->error);
@@ -205,7 +201,6 @@ static void profile_hid_report_subscription_event(struct log_event_buf *buf,
 	const struct hid_report_subscription_event *event =
 		cast_hid_report_subscription_event(eh);
 
-	ARG_UNUSED(event);
 	profiler_log_encode_u32(buf, (u32_t)event->subscriber);
 	profiler_log_encode_u32(buf, event->report_type);
 	profiler_log_encode_u32(buf, event->enabled);
