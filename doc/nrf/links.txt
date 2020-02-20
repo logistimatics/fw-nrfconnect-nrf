@@ -84,6 +84,8 @@
 
 .. _`nRF9160 DK product page`: https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF9160-DK/Download#infotabs
 
+.. _`SUPL client download`: https://www.nordicsemi.com/Software-and-tools/Development-Kits/nRF9160-DK/Download#supl-c
+
 .. _`nRF9160 product website`: https://www.nordicsemi.com/Products/Low-power-cellular-IoT/nRF9160-SiP
 
 .. _`nRF9160 product website (compatible downloads)`: https://www.nordicsemi.com/Products/Low-power-cellular-IoT/nRF9160/Download#infotabs
@@ -180,6 +182,12 @@
 .. _`GPS`: https://en.wikipedia.org/wiki/Global_Positioning_System
 .. _`A-GPS`: https://en.wikipedia.org/wiki/Assisted_GPS
 .. _`NMEA`: https://www.gpsworld.com/what-exactly-is-gps-nmea-data/
+
+.. _`EnOcean`: https://www.enocean.com
+.. _`Easyfit Single/Double Rocker Wall Switch for BLE - EWSSB/EWSDB`: https://www.enocean.com/en/products/enocean_modules_24ghz_ble/easyfit-single-double-rocker-wall-switch-for-ble-ewssb-ewsdb
+.. _`Easyfit Single/Double Rocker Pad for BLE - ESRPB/EDRPB`: https://www.enocean.com/en/products/enocean_modules_24ghz_ble/easyfit-single-double-rocker-pad-for-ble-esrpb-edrpb
+.. _`Easyfit Motion Detector with Illumination Sensor - EMDCB`: https://www.enocean.com/en/products/enocean_modules_24ghz_ble/easyfit-motion-detector-with-illumination-sensor-emdcb
+
 
 .. ### Links to Bluetooth specs
 
