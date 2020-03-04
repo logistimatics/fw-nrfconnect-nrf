@@ -11,68 +11,10 @@ import wave
 import threading
 import queue
 
-from configurator_core import fetch_free_steps_buffer_info, led_send_single_step
-from configurator_core import Step
-
-MS_PER_SEC = 1000
-
-
-def validate_params(DEVICE_CONFIG, freq, led_id):
-    valid_params = False
-
-    if freq <= 0:
-        print('Frequency has to be greater than zero Hz')
-    elif DEVICE_CONFIG['stream_led_cnt'] == 0:
-        print('Device does not support LED stream')
-    elif led_id < 0:
-        print('LED ID cannot be less than zero')
-    elif led_id >= DEVICE_CONFIG['stream_led_cnt']:
-        print('LED with selected ID is not supported on selected device')
-    else:
-        valid_params = True
-
-    return valid_params
-
-
-def send_continuous_led_stream(dev, recipient, DEVICE_CONFIG, led_id, freq, substep_cnt = 10):
-    if not validate_params(DEVICE_CONFIG, freq, led_id):
-        return
-
-    try:
-        # LED stream ends on user request (Ctrl+C) or when an error occurrs.
-        step = Step(
-            r = 0,
-            g = 0,
-            b = 0,
-            substep_count = substep_cnt,
-            substep_time =  MS_PER_SEC // (freq * substep_cnt)
-        )
-
-        print('LED stream started, press Ctrl+C to interrupt')
-        while True:
-            success, (free, ready) = fetch_free_steps_buffer_info(dev, recipient, led_id)
-
-            if not success:
-                break
-
-            if not ready:
-                print('LEDs are not ready')
-                break
-
-            while free > 0:
-                # Send steps with random color and predefined duration
-                step.generate_random_color()
-
-                success = led_send_single_step(dev, recipient, step, led_id)
-
-                if not success:
-                    break
-
-                free -= 1
-    except:
-        pass
-
-    print('LED stream ended')
+from modules.led_stream import MS_PER_SEC
+from modules.led_stream import Step
+from modules.led_stream import validate_params
+from modules.led_stream import fetch_free_steps_buffer_info, led_send_single_step
 
 
 class MusicLedStream():
@@ -125,7 +67,8 @@ class MusicLedStream():
 
     @staticmethod
     def peak_to_hue(peak):
-        assert peak >= 0 and peak <= 1
+        assert peak >= 0
+        assert peak <= 1
 
         G = 120
         B = 240
@@ -148,7 +91,7 @@ class MusicLedStream():
         while True:
             data = self.queue.get()
 
-            if data == None:
+            if data is None:
                 # LED stream ended
                 return
 
@@ -182,7 +125,7 @@ class MusicLedStream():
 
             if not success:
                 print("Device communication problem")
-                send_error_event.set()
+                self.send_error_event.set()
                 return
 
             self.led_effects['sent_cnt'] += 1
@@ -263,7 +206,6 @@ class MusicLedStream():
 
         except KeyboardInterrupt:
             print("Music LED stream interrupted by user")
-            pass
 
         self.stream_term()
 

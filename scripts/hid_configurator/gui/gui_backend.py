@@ -10,9 +10,11 @@ import hid
 
 # configurator_core.py is in upper directory so we add it to path
 sys.path.append('..')
-from configurator_core import DEVICE
-from configurator_core import get_device_pid, get_device_vid, open_device, get_device_type, get_dfu_image_version
-from configurator_core import fwinfo, fwreboot, fetch_config, change_config, dfu_transfer
+from devices import DEVICE
+from devices import get_device_pid, get_device_vid, get_device_type
+from configurator_core import open_device
+from modules.dfu import get_dfu_image_version, fwinfo, fwreboot, dfu_transfer
+from modules.config import fetch_config, change_config
 
 
 class Device:
@@ -29,8 +31,8 @@ class Device:
             device_type = get_device_type(device['product_id'])
             if device_type is not None and \
                get_device_vid(device_type) == device['vendor_id']:
-                    print("Add {} to device list".format(device_type))
-                    device_list.append(device_type)
+                print("Add {} to device list".format(device_type))
+                device_list.append(device_type)
 
         return device_list
 
@@ -62,7 +64,7 @@ class Device:
             print('DFU completed')
         else:
             print('Cannot connect to device after reboot')
-        return (self.dev is not None)
+        return self.dev is not None
 
     def setcpi(self, value):
         config_name = 'cpi'
@@ -93,7 +95,8 @@ class Device:
         dfu_image = file
         return dfu_transfer(self.dev, self.pid, dfu_image, update_progressbar)
 
-    def dfu_image_version(self, filepath):
+    @staticmethod
+    def dfu_image_version(filepath):
         ver = get_dfu_image_version(filepath)
         if ver is None:
             return "Wrong image"

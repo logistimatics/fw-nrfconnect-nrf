@@ -6,11 +6,12 @@
 import argparse
 import logging
 
-from configurator_core import DEVICE
-from configurator_core import get_device_pid, open_device
-from configurator_core import fwinfo, fwreboot, change_config, fetch_config
-from configurator_core import dfu_transfer, get_dfu_image_version
-from led_stream import send_continuous_led_stream, send_music_led_stream
+from configurator_core import open_device
+from devices import DEVICE, get_device_pid
+from modules.config import change_config, fetch_config
+from modules.dfu import fwinfo, fwreboot, dfu_transfer, get_dfu_image_version
+from modules.led_stream import send_continuous_led_stream
+from modules.music_led_stream import send_music_led_stream
 
 
 def progress_bar(permil):
@@ -163,7 +164,7 @@ def parse_arguments():
         device_config = DEVICE[device_name]['config']
 
         if device_config is not None:
-            assert type(device_config) == dict
+            assert isinstance(device_config, dict)
             parser_config = sp_commands.add_parser('config', help='Configuration option get/set')
 
             sp_config = parser_config.add_subparsers(dest='module')
@@ -171,9 +172,9 @@ def parse_arguments():
 
             for module_name in device_config:
                 module_config = device_config[module_name]
-                assert type(module_config) == dict
+                assert isinstance(module_config, dict)
                 module_opts = module_config['options']
-                assert type(module_opts) == dict
+                assert isinstance(module_opts, dict)
 
                 parser_config_module = sp_config.add_parser(module_name, help='{} module options'.format(module_name))
                 sp_config_module = parser_config_module.add_subparsers(dest='option')

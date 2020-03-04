@@ -47,9 +47,8 @@ enum fota_download_evt_id {
  */
 struct fota_download_evt {
 	enum fota_download_evt_id id;
-#ifdef CONFIG_FOTA_DOWNLOAD_PROGRESS_EVT
-	int offset;
-#endif
+	/** Download progress % */
+	int progress;
 };
 
 /**
