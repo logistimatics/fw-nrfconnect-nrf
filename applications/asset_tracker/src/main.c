@@ -14,14 +14,14 @@
 #include <power/reboot.h>
 #include <logging/log_ctrl.h>
 #if defined(CONFIG_BSD_LIBRARY)
-#include <net/bsdlib.h>
+#include <modem/bsdlib.h>
 #include <bsd.h>
-#include <lte_lc.h>
-#include <modem_info.h>
+#include <modem/lte_lc.h>
+#include <modem/modem_info.h>
 #endif /* CONFIG_BSD_LIBRARY */
 #include <net/cloud.h>
 #include <net/socket.h>
-#include <nrf_cloud.h>
+#include <net/nrf_cloud.h>
 
 #if defined(CONFIG_BOOTLOADER_MCUBOOT)
 #include <dfu/mcuboot.h>
@@ -33,7 +33,7 @@
 #include "ui.h"
 #include "gps_controller.h"
 #include "service_info.h"
-#include "at_cmd.h"
+#include <modem/at_cmd.h>
 #include "watchdog.h"
 
 #include <logging/log.h>
